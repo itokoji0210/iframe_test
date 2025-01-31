@@ -88,10 +88,10 @@
 <body>
     <div class="slider-container">
         <div class="video-wrapper left">
-            <iframe id="video-left"></iframe>
+            <iframe id="video-left" src="https://mov-player.yomiuri.co.jp/script?key=edc5d1c5bf9d32e47acd9d75ea0e84c87e2bfeee0f45165d61cec1b784bdbc1e&type=1" allow="autoplay"></iframe>
         </div>
         <div class="video-wrapper right">
-            <iframe id="video-right"></iframe>
+            <iframe id="video-right" src="https://mov-player.yomiuri.co.jp/script?key=7e12894ac493090b66769e35246715702a03fc340e65246d7aa642a9dc850fa3&type=1" allow="autoplay"></iframe>
         </div>
         <div class="slider" id="slider"></div>
     </div>
@@ -100,35 +100,43 @@
         <button id="pause-btn">停止</button>
     </div>
     <script>
-        const leftIframe = document.getElementById('video-left');
-        const rightIframe = document.getElementById('video-right');
-        leftIframe.src = "https://mov-player.yomiuri.co.jp/script?key=edc5d1c5bf9d32e47acd9d75ea0e84c87e2bfeee0f45165d61cec1b784bdbc1e&type=1";
-        rightIframe.src = "https://mov-player.yomiuri.co.jp/script?key=7e12894ac493090b66769e35246715702a03fc340e65246d7aa642a9dc850fa3&type=1";
-        
-        document.getElementById('play-btn').addEventListener('click', () => {
-            leftIframe.contentWindow.postMessage({ action: 'play' }, '*');
-            rightIframe.contentWindow.postMessage({ action: 'play' }, '*');
-        });
-        
-        document.getElementById('pause-btn').addEventListener('click', () => {
-            leftIframe.contentWindow.postMessage({ action: 'pause' }, '*');
-            rightIframe.contentWindow.postMessage({ action: 'pause' }, '*');
-        });
-        
         const slider = document.getElementById('slider');
         const leftWrapper = document.querySelector('.video-wrapper.left');
         let isDragging = false;
-        
+
         slider.addEventListener('pointerdown', () => { isDragging = true; });
         document.addEventListener('pointermove', (e) => { if (isDragging) updateSliderPosition(e.clientX); });
         document.addEventListener('pointerup', () => { isDragging = false; });
-        
+
         function updateSliderPosition(clientX) {
             let position = (clientX / window.innerWidth) * 100;
             position = Math.max(0, Math.min(100, position));
             slider.style.left = `${position}%`;
             leftWrapper.style.clipPath = `inset(0 ${100 - position}% 0 0)`;
         }
+
+        function sendCommandToIframes(command) {
+            const leftIframe = document.getElementById('video-left').contentWindow;
+            const rightIframe = document.getElementById('video-right').contentWindow;
+            leftIframe.postMessage({ action: command }, '*');
+            rightIframe.postMessage({ action: command }, '*');
+        }
+
+        document.getElementById('play-btn').addEventListener('click', () => {
+            sendCommandToIframes('play');
+        });
+        
+        document.getElementById('pause-btn').addEventListener('click', () => {
+            sendCommandToIframes('pause');
+        });
+        
+        function syncVideos() {
+            setInterval(() => {
+                sendCommandToIframes('sync');
+            }, 500);
+        }
+
+        syncVideos();
     </script>
 </body>
 </html>
