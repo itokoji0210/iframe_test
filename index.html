@@ -31,6 +31,7 @@
             left: 0;
             height: 100%;
             width: 100%;
+            pointer-events: none;
         }
         .iframe-wrapper.left {
             z-index: 2;
@@ -50,6 +51,7 @@
             z-index: 3;
             transform: translateX(-50%);
             touch-action: none;
+            user-select: none;
         }
         .slider::before {
             content: '';
@@ -82,7 +84,7 @@
                 height: '360',
                 width: '640',
                 videoId: 's_kdaEEnyuM',
-                playerVars: { 'playsinline': 1, 'autoplay': 1, 'mute': 1 },
+                playerVars: { 'playsinline': 1, 'autoplay': 1, 'mute': 1, 'modestbranding': 1, 'controls': 0, 'disablekb': 1 },
                 events: {
                     'onReady': () => { leftReady = true; syncPlay(); },
                     'onStateChange': syncVideos
@@ -92,7 +94,7 @@
                 height: '360',
                 width: '640',
                 videoId: 'JdLvgPegPF4',
-                playerVars: { 'playsinline': 1, 'autoplay': 1, 'mute': 1 },
+                playerVars: { 'playsinline': 1, 'autoplay': 1, 'mute': 1, 'modestbranding': 1, 'controls': 0, 'disablekb': 1 },
                 events: {
                     'onReady': () => { rightReady = true; syncPlay(); },
                     'onStateChange': syncVideos
@@ -107,7 +109,13 @@
             }
         }
 
-        function syncVideos() {
+        function syncVideos(event) {
+            if (event.data === 0) {
+                playerLeft.seekTo(0);
+                playerRight.seekTo(0);
+                playerLeft.playVideo();
+                playerRight.playVideo();
+            }
             let time = playerLeft.getCurrentTime();
             if (Math.abs(playerRight.getCurrentTime() - time) > 0.5) {
                 playerRight.seekTo(time, true);
