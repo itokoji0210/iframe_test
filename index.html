@@ -31,6 +31,7 @@
             left: 0;
             height: 100%;
             width: 100%;
+            pointer-events: none;
         }
         .iframe-wrapper.left {
             z-index: 2;
@@ -62,6 +63,22 @@
             border-radius: 50%;
             transform: translate(-50%, -50%);
         }
+        .progress-bar {
+            width: 90%;
+            max-width: 600px;
+            height: 10px;
+            background: #333;
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+            margin-top: 10px;
+        }
+        .progress {
+            height: 100%;
+            width: 0%;
+            background: #4CAF50;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -75,6 +92,9 @@
         <div class="slider" id="slider"></div>
     </div>
     <button id="play-pause-btn">▶ / ⏸</button>
+    <div class="progress-bar" id="progress-bar">
+        <div class="progress" id="progress"></div>
+    </div>
     <script>
         let playerLeft, playerRight;
         function onYouTubeIframeAPIReady() {
@@ -82,14 +102,27 @@
                 height: '100%',
                 width: '100%',
                 videoId: 's_kdaEEnyuM',
-                playerVars: { 'playsinline': 1 },
+                playerVars: { 'playsinline': 1, 'rel': 0 },
+                events: {
+                    'onStateChange': syncVideos
+                }
             });
             playerRight = new YT.Player('player-right', {
                 height: '100%',
                 width: '100%',
                 videoId: 'JdLvgPegPF4',
-                playerVars: { 'playsinline': 1 },
+                playerVars: { 'playsinline': 1, 'rel': 0 },
+                events: {
+                    'onStateChange': syncVideos
+                }
             });
+        }
+
+        function syncVideos() {
+            let time = playerLeft.getCurrentTime();
+            if (Math.abs(playerRight.getCurrentTime() - time) > 0.5) {
+                playerRight.seekTo(time, true);
+            }
         }
 
         document.getElementById('play-pause-btn').addEventListener('click', () => {
@@ -100,6 +133,16 @@
                 playerLeft.playVideo();
                 playerRight.playVideo();
             }
+        });
+
+        const progressBar = document.getElementById('progress-bar');
+        const progress = document.getElementById('progress');
+        progressBar.addEventListener('click', (e) => {
+            const rect = progressBar.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            const newTime = percent * playerLeft.getDuration();
+            playerLeft.seekTo(newTime, true);
+            playerRight.seekTo(newTime, true);
         });
     </script>
 </body>
