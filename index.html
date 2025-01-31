@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>動画スライダー比較</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #000;
+            flex-direction: column;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .slider-container {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            height: 70vh;
+            overflow: hidden;
+        }
+        .video-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            display: flex;
+        }
+        .video-wrapper.left {
+            z-index: 2;
+            clip-path: inset(0 50% 0 0);
+        }
+        .video-wrapper.right {
+            z-index: 1;
+        }
+        .video-wrapper iframe {
+            height: 100%;
+            width: 100%;
+            border: none;
+        }
+        .slider {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 5px;
+            background: rgba(255, 255, 255, 0.8);
+            cursor: ew-resize;
+            z-index: 3;
+            transform: translateX(-50%);
+            touch-action: none;
+        }
+        .slider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 30px;
+            height: 30px;
+            background: #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body>
+    <div class="slider-container">
+        <div class="video-wrapper left">
+            <iframe id="video-left" src="https://mov-player.yomiuri.co.jp/script?key=edc5d1c5bf9d32e47acd9d75ea0e84c87e2bfeee0f45165d61cec1b784bdbc1e&type=1" allowfullscreen></iframe>
+        </div>
+        <div class="video-wrapper right">
+            <iframe id="video-right" src="https://mov-player.yomiuri.co.jp/script?key=7e12894ac493090b66769e35246715702a03fc340e65246d7aa642a9dc850fa3&type=1" allowfullscreen></iframe>
+        </div>
+        <div class="slider" id="slider"></div>
+    </div>
+    <script>
+        const slider = document.getElementById('slider');
+        const leftWrapper = document.querySelector('.video-wrapper.left');
+        let isDragging = false;
+
+        slider.addEventListener('pointerdown', () => { isDragging = true; });
+        document.addEventListener('pointermove', (e) => { if (isDragging) updateSliderPosition(e.clientX); });
+        document.addEventListener('pointerup', () => { isDragging = false; });
+
+        function updateSliderPosition(clientX) {
+            let position = (clientX / window.innerWidth) * 100;
+            position = Math.max(0, Math.min(100, position));
+            slider.style.left = `${position}%`;
+            leftWrapper.style.clipPath = `inset(0 ${100 - position}% 0 0)`;
+        }
+    </script>
+</body>
+</html>
