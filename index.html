@@ -83,21 +83,39 @@
             border-radius: 5px;
             cursor: pointer;
         }
+        .progress-container {
+            width: 80%;
+            max-width: 600px;
+            height: 10px;
+            background: #333;
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #4CAF50;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="slider-container">
         <div class="video-wrapper left">
-            <iframe id="video-left" src="https://mov-player.yomiuri.co.jp/script?key=edc5d1c5bf9d32e47acd9d75ea0e84c87e2bfeee0f45165d61cec1b784bdbc1e&type=1" allow="autoplay"></iframe>
+            <iframe id="video-left" src="https://www.youtube.com/embed/?enablejsapi=1" allow="autoplay"></iframe>
         </div>
         <div class="video-wrapper right">
-            <iframe id="video-right" src="https://mov-player.yomiuri.co.jp/script?key=7e12894ac493090b66769e35246715702a03fc340e65246d7aa642a9dc850fa3&type=1" allow="autoplay"></iframe>
+            <iframe id="video-right" src="https://www.youtube.com/embed/?enablejsapi=1" allow="autoplay"></iframe>
         </div>
         <div class="slider" id="slider"></div>
     </div>
     <div class="controls">
         <button id="play-btn">再生</button>
         <button id="pause-btn">停止</button>
+    </div>
+    <div class="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
     </div>
     <script>
         const slider = document.getElementById('slider');
@@ -116,27 +134,24 @@
         }
 
         function sendCommandToIframes(command) {
-            const leftIframe = document.getElementById('video-left').contentWindow;
-            const rightIframe = document.getElementById('video-right').contentWindow;
-            leftIframe.postMessage({ action: command }, '*');
-            rightIframe.postMessage({ action: command }, '*');
+            document.getElementById('video-left').contentWindow.postMessage(JSON.stringify({ event: 'command', func: command, args: [] }), '*');
+            document.getElementById('video-right').contentWindow.postMessage(JSON.stringify({ event: 'command', func: command, args: [] }), '*');
         }
 
         document.getElementById('play-btn').addEventListener('click', () => {
-            sendCommandToIframes('play');
+            sendCommandToIframes('playVideo');
         });
         
         document.getElementById('pause-btn').addEventListener('click', () => {
-            sendCommandToIframes('pause');
+            sendCommandToIframes('pauseVideo');
         });
-        
-        function syncVideos() {
-            setInterval(() => {
-                sendCommandToIframes('sync');
-            }, 500);
-        }
 
-        syncVideos();
+        function updateProgress() {
+            let progress = document.getElementById('progress-bar');
+            let currentTime = Math.random() * 100; // 動画の同期情報を取得するコードに変更が必要
+            progress.style.width = `${currentTime}%`;
+        }
+        setInterval(updateProgress, 1000);
     </script>
 </body>
 </html>
