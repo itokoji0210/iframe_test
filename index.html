@@ -3,170 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>動画比較スライダー</title>
+    <title>動画スライダー比較</title>
     <style>
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #000;
-            color: white;
-        }
-        .controls {
-            text-align: center;
-            padding: 10px;
-            background: #222;
-        }
-        .container {
-            position: relative;
-            width: 100vw;
-            height: 80vh;
+            overflow: hidden;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #000;
+            flex-direction: column;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .slider-container {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            height: 70vh;
+            overflow: hidden;
         }
         .video-wrapper {
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
-        .video-container {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
             height: 100%;
+            width: 100%;
             display: flex;
-            align-items: center;
-            justify-content: center;
         }
-        .video-container iframe {
+        .video-wrapper.left {
+            z-index: 2;
+            clip-path: inset(0 50% 0 0);
+        }
+        .video-wrapper.right {
+            z-index: 1;
+        }
+        .video-wrapper video {
+            height: 100%;
             width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-        .overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 50%;
-            height: 100%;
-            overflow: hidden;
+            object-fit: cover;
         }
         .slider {
             position: absolute;
             top: 0;
+            bottom: 0;
             left: 50%;
             width: 5px;
-            height: 100%;
-            background: white;
+            background: rgba(255, 255, 255, 0.8);
             cursor: ew-resize;
+            z-index: 3;
             transform: translateX(-50%);
+            touch-action: none;
         }
-        .progress-container {
-            width: 80%;
-            margin: auto;
+        .slider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 30px;
+            height: 30px;
+            background: #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            width: 100%;
+            margin-top: 10px;
         }
         .progress-bar {
-            width: 100%;
-            height: 5px;
-            background: gray;
+            width: 90%;
+            max-width: 600px;
+            height: 10px;
+            background: #333;
+            border-radius: 5px;
+            cursor: pointer;
             position: relative;
         }
         .progress {
+            height: 100%;
             width: 0%;
-            height: 5px;
-            background: red;
-            position: absolute;
-            top: 0;
-            left: 0;
+            background: #4CAF50;
+            border-radius: 5px;
         }
-        .time-display {
-            margin-top: 5px;
+        .time-display, #play-pause-btn {
+            color: white;
+            font-size: 16px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <div class="controls">
-        <button id="playPause">再生 / 停止</button>
-        <div class="progress-container">
-            <div class="progress-bar">
-                <div class="progress" id="progress"></div>
-            </div>
-            <div class="time-display" id="timeDisplay">00:00 / 00:00</div>
+    <div class="slider-container">
+        <div class="video-wrapper left">
+            <video id="video-left" src="https://mov-player.yomiuri.co.jp/script?key=edc5d1c5bf9d32e47acd9d75ea0e84c87e2bfeee0f45165d61cec1b784bdbc1e&type=1" controls playsinline></video>
         </div>
+        <div class="video-wrapper right">
+            <video id="video-right" src="https://mov-player.yomiuri.co.jp/script?key=7e12894ac493090b66769e35246715702a03fc340e65246d7aa642a9dc850fa3&type=1" controls playsinline></video>
+        </div>
+        <div class="slider" id="slider"></div>
     </div>
-    <div class="container">
-        <div class="video-wrapper">
-            <div class="video-container">
-                <iframe id="video1" src="https://mov-player.yomiuri.co.jp/script?key=edc5d1c5bf9d32e47acd9d75ea0e84c87e2bfeee0f45165d61cec1b784bdbc1e&type=1" frameborder="0" allowfullscreen></iframe>
-            </div>
-            <div class="overlay" id="overlay">
-                <iframe id="video2" src="https://mov-player.yomiuri.co.jp/script?key=7e12894ac493090b66769e35246715702a03fc340e65246d7aa642a9dc850fa3&type=1" frameborder="0" allowfullscreen></iframe>
-            </div>
-            <div class="slider" id="slider"></div>
+    <div class="controls">
+        <button id="play-pause-btn">▶ / ⏸</button>
+        <div class="progress-bar" id="progress-bar">
+            <div class="progress" id="progress"></div>
         </div>
+        <div class="time-display" id="time-display">00:00 / 00:00</div>
     </div>
     <script>
-        const slider = document.getElementById("slider");
-        const overlay = document.getElementById("overlay");
-        const playPauseButton = document.getElementById("playPause");
-        const progressBar = document.getElementById("progress");
-        const timeDisplay = document.getElementById("timeDisplay");
-        let playing = false;
-        let currentTime = 0;
-        let duration = 100;
+        const videoLeft = document.getElementById('video-left');
+        const videoRight = document.getElementById('video-right');
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        const slider = document.getElementById('slider');
+        const leftWrapper = document.querySelector('.video-wrapper.left');
+        let isDragging = false;
 
-        slider.addEventListener("mousedown", (event) => {
-            event.preventDefault();
-            document.addEventListener("mousemove", moveSlider);
-            document.addEventListener("mouseup", () => {
-                document.removeEventListener("mousemove", moveSlider);
-            });
-        });
-
-        function moveSlider(event) {
-            let pos = event.clientX / window.innerWidth * 100;
-            if (pos < 0) pos = 0;
-            if (pos > 100) pos = 100;
-            overlay.style.width = pos + "%";
-            slider.style.left = pos + "%";
-        }
-
-        playPauseButton.addEventListener("click", () => {
-            playing = !playing;
-            if (playing) {
-                playPauseButton.textContent = "停止";
-                simulatePlay();
+        playPauseBtn.addEventListener('click', () => {
+            if (videoLeft.paused) {
+                videoLeft.play();
+                videoRight.play();
             } else {
-                playPauseButton.textContent = "再生";
-                simulatePause();
+                videoLeft.pause();
+                videoRight.pause();
             }
         });
 
-        function simulatePlay() {
-            let interval = setInterval(() => {
-                if (!playing) {
-                    clearInterval(interval);
-                    return;
-                }
-                currentTime++;
-                if (currentTime > duration) {
-                    currentTime = 0;
-                }
-                updateProgress();
-            }, 1000);
-        }
+        slider.addEventListener('pointerdown', () => { isDragging = true; });
+        document.addEventListener('pointermove', (e) => { if (isDragging) updateSliderPosition(e.clientX); });
+        document.addEventListener('pointerup', () => { isDragging = false; });
 
-        function simulatePause() {
-            playing = false;
-        }
-
-        function updateProgress() {
-            let percentage = (currentTime / duration) * 100;
-            progressBar.style.width = percentage + "%";
-            let minutes = Math.floor(currentTime / 60);
-            let seconds = currentTime % 60;
-            timeDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} / 01:40`;
+        function updateSliderPosition(clientX) {
+            let position = (clientX / window.innerWidth) * 100;
+            position = Math.max(0, Math.min(100, position));
+            slider.style.left = `${position}%`;
+            leftWrapper.style.clipPath = `inset(0 ${100 - position}% 0 0)`;
         }
     </script>
 </body>
