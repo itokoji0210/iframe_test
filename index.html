@@ -119,12 +119,25 @@
         <div class="time-display" id="time-display">00:00 / 00:00</div>
     </div>
     <script>
-        const progressBar = document.getElementById('progress-bar');
-        const progress = document.getElementById('progress');
-        progressBar.addEventListener('click', (e) => {
-            const rect = progressBar.getBoundingClientRect();
-            const percent = (e.clientX - rect.left) / rect.width;
-            window.postMessage({ type: 'seek', time: percent }, '*');
+        const slider = document.getElementById('slider');
+        const leftWrapper = document.querySelector('.iframe-wrapper.left');
+        let isDragging = false;
+
+        slider.addEventListener('pointerdown', () => { isDragging = true; });
+        document.addEventListener('pointermove', (e) => { if (isDragging) updateSliderPosition(e.clientX); });
+        document.addEventListener('pointerup', () => { isDragging = false; });
+
+        function updateSliderPosition(clientX) {
+            let position = (clientX / window.innerWidth) * 100;
+            position = Math.max(0, Math.min(100, position));
+            slider.style.left = `${position}%`;
+            leftWrapper.style.clipPath = `inset(0 ${100 - position}% 0 0)`;
+        }
+
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        playPauseBtn.addEventListener('click', () => {
+            document.getElementById('iframe-left').contentWindow.postMessage('togglePlay', '*');
+            document.getElementById('iframe-right').contentWindow.postMessage('togglePlay', '*');
         });
     </script>
 </body>
