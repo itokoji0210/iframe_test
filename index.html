@@ -30,6 +30,7 @@
             left: 0;
             width: 100%;
             height: 100%;
+            pointer-events: none;
         }
         .iframe-wrapper.left {
             z-index: 2;
@@ -121,9 +122,10 @@
         }
 
         function syncVideos() {
-            let time = playerLeft.getCurrentTime();
-            if (Math.abs(playerRight.getCurrentTime() - time) > 0.1) {
-                playerRight.seekTo(time, true);
+            let timeLeft = playerLeft.getCurrentTime();
+            let timeRight = playerRight.getCurrentTime();
+            if (Math.abs(timeRight - timeLeft) > 0.1) {
+                playerRight.seekTo(timeLeft, true);
             }
         }
 
@@ -136,6 +138,30 @@
                 playerRight.playVideo();
             }
         });
+
+        const progressBar = document.getElementById('progress-bar');
+        const progress = document.getElementById('progress');
+        progressBar.addEventListener('click', (e) => {
+            const rect = progressBar.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            const newTime = percent * playerLeft.getDuration();
+            playerLeft.seekTo(newTime, true);
+            playerRight.seekTo(newTime, true);
+        });
+
+        setInterval(() => {
+            let currentTime = playerLeft.getCurrentTime();
+            let duration = playerLeft.getDuration();
+            let percent = (currentTime / duration) * 100;
+            progress.style.width = percent + '%';
+            document.getElementById('time-display').textContent = formatTime(currentTime) + ' / ' + formatTime(duration);
+        }, 500);
+
+        function formatTime(seconds) {
+            let min = Math.floor(seconds / 60);
+            let sec = Math.floor(seconds % 60);
+            return `${min}:${sec.toString().padStart(2, '0')}`;
+        }
     </script>
 </body>
 </html>
