@@ -139,29 +139,27 @@
             }
         });
 
-        const progressBar = document.getElementById('progress-bar');
-        const progress = document.getElementById('progress');
-        progressBar.addEventListener('click', (e) => {
-            const rect = progressBar.getBoundingClientRect();
-            const percent = (e.clientX - rect.left) / rect.width;
-            const newTime = percent * playerLeft.getDuration();
-            playerLeft.seekTo(newTime, true);
-            playerRight.seekTo(newTime, true);
+        const slider = document.getElementById('slider');
+        const leftWrapper = document.querySelector('.iframe-wrapper.left');
+        let isDragging = false;
+
+        slider.addEventListener('pointerdown', (e) => {
+            isDragging = true;
+            document.body.style.cursor = 'ew-resize';
+            e.preventDefault();
         });
-
-        setInterval(() => {
-            let currentTime = playerLeft.getCurrentTime();
-            let duration = playerLeft.getDuration();
-            let percent = (currentTime / duration) * 100;
-            progress.style.width = percent + '%';
-            document.getElementById('time-display').textContent = formatTime(currentTime) + ' / ' + formatTime(duration);
-        }, 500);
-
-        function formatTime(seconds) {
-            let min = Math.floor(seconds / 60);
-            let sec = Math.floor(seconds % 60);
-            return `${min}:${sec.toString().padStart(2, '0')}`;
-        }
+        document.addEventListener('pointermove', (e) => {
+            if (isDragging) {
+                let position = (e.clientX / window.innerWidth) * 100;
+                position = Math.max(0, Math.min(100, position));
+                slider.style.left = `${position}%`;
+                leftWrapper.style.clipPath = `inset(0 ${100 - position}% 0 0)`;
+            }
+        });
+        document.addEventListener('pointerup', () => {
+            isDragging = false;
+            document.body.style.cursor = 'default';
+        });
     </script>
 </body>
 </html>
