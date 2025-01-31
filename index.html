@@ -31,7 +31,6 @@
             left: 0;
             height: 100%;
             width: 100%;
-            pointer-events: none;
         }
         .iframe-wrapper.left {
             z-index: 2;
@@ -81,20 +80,20 @@
         let playerLeft, playerRight, leftReady = false, rightReady = false;
         function onYouTubeIframeAPIReady() {
             playerLeft = new YT.Player('player-left', {
-                height: '360',
-                width: '640',
+                height: '100%',
+                width: '100%',
                 videoId: 's_kdaEEnyuM',
-                playerVars: { 'playsinline': 1, 'autoplay': 1, 'mute': 1, 'modestbranding': 1, 'controls': 0, 'disablekb': 1 },
+                playerVars: { 'playsinline': 1, 'autoplay': 1, 'mute': 1, 'modestbranding': 1, 'controls': 0, 'disablekb': 1, 'rel': 0 },
                 events: {
                     'onReady': () => { leftReady = true; syncPlay(); },
                     'onStateChange': syncVideos
                 }
             });
             playerRight = new YT.Player('player-right', {
-                height: '360',
-                width: '640',
+                height: '100%',
+                width: '100%',
                 videoId: 'JdLvgPegPF4',
-                playerVars: { 'playsinline': 1, 'autoplay': 1, 'mute': 1, 'modestbranding': 1, 'controls': 0, 'disablekb': 1 },
+                playerVars: { 'playsinline': 1, 'autoplay': 1, 'mute': 1, 'modestbranding': 1, 'controls': 0, 'disablekb': 1, 'rel': 0 },
                 events: {
                     'onReady': () => { rightReady = true; syncPlay(); },
                     'onStateChange': syncVideos
