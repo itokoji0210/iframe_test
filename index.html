@@ -21,7 +21,7 @@
         .slider-container {
             position: relative;
             width: 100vw;
-            height: 100vh;
+            height: 80vh;
             overflow: hidden;
         }
         .iframe-wrapper {
@@ -51,17 +51,6 @@
             touch-action: none;
             user-select: none;
         }
-        .slider::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 30px;
-            height: 30px;
-            background: #fff;
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-        }
         .progress-bar {
             width: 90%;
             max-width: 600px;
@@ -77,6 +66,10 @@
             width: 0%;
             background: #4CAF50;
             border-radius: 5px;
+        }
+        .time-display {
+            color: white;
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -94,6 +87,7 @@
     <div class="progress-bar" id="progress-bar">
         <div class="progress" id="progress"></div>
     </div>
+    <div class="time-display" id="time-display">00:00 / 00:00</div>
     <script>
         let playerLeft, playerRight, leftReady = false, rightReady = false;
         function onYouTubeIframeAPIReady() {
@@ -143,25 +137,22 @@
             }
         });
 
-        const slider = document.getElementById('slider');
-        const leftWrapper = document.querySelector('.iframe-wrapper.left');
-        let isDragging = false;
+        const progressBar = document.getElementById('progress-bar');
+        const progress = document.getElementById('progress');
+        const timeDisplay = document.getElementById('time-display');
+        setInterval(() => {
+            let currentTime = playerLeft.getCurrentTime();
+            let duration = playerLeft.getDuration();
+            let percent = (currentTime / duration) * 100;
+            progress.style.width = percent + '%';
+            timeDisplay.textContent = `${formatTime(currentTime)} / ${formatTime(duration)}`;
+        }, 500);
 
-        slider.addEventListener('pointerdown', (e) => {
-            isDragging = true;
-            e.preventDefault();
-        });
-        document.addEventListener('pointermove', (e) => {
-            if (isDragging) {
-                let position = (e.clientX / window.innerWidth) * 100;
-                position = Math.max(0, Math.min(100, position));
-                slider.style.left = `${position}%`;
-                leftWrapper.style.clipPath = `inset(0 ${100 - position}% 0 0)`;
-            }
-        });
-        document.addEventListener('pointerup', () => {
-            isDragging = false;
-        });
+        function formatTime(seconds) {
+            let min = Math.floor(seconds / 60);
+            let sec = Math.floor(seconds % 60);
+            return `${min}:${sec.toString().padStart(2, '0')}`;
+        }
     </script>
 </body>
 </html>
