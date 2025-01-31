@@ -76,33 +76,35 @@
     </div>
     <button id="play-pause-btn">▶ / ⏸</button>
     <script>
-        let playerLeft, playerRight;
+        let playerLeft, playerRight, leftReady = false, rightReady = false;
         function onYouTubeIframeAPIReady() {
             playerLeft = new YT.Player('player-left', {
-                height: '100%',
-                width: '100%',
+                height: '360',
+                width: '640',
                 videoId: 's_kdaEEnyuM',
-                playerVars: { 'playsinline': 1 },
+                playerVars: { 'playsinline': 1, 'autoplay': 1, 'mute': 1 },
                 events: {
-                    'onReady': syncPlay,
+                    'onReady': () => { leftReady = true; syncPlay(); },
                     'onStateChange': syncVideos
                 }
             });
             playerRight = new YT.Player('player-right', {
-                height: '100%',
-                width: '100%',
+                height: '360',
+                width: '640',
                 videoId: 'JdLvgPegPF4',
-                playerVars: { 'playsinline': 1 },
+                playerVars: { 'playsinline': 1, 'autoplay': 1, 'mute': 1 },
                 events: {
-                    'onReady': syncPlay,
+                    'onReady': () => { rightReady = true; syncPlay(); },
                     'onStateChange': syncVideos
                 }
             });
         }
 
         function syncPlay() {
-            playerLeft.mute();
-            playerRight.mute();
+            if (leftReady && rightReady) {
+                playerLeft.playVideo();
+                playerRight.playVideo();
+            }
         }
 
         function syncVideos() {
