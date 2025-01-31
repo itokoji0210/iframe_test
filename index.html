@@ -22,10 +22,9 @@
             width: 100%;
             height: 100%;
         }
-        .video-container video {
+        .video-container iframe {
             width: 100%;
             height: 100%;
-            object-fit: cover;
         }
         .overlay {
             position: absolute;
@@ -35,13 +34,9 @@
             height: 100%;
             overflow: hidden;
         }
-        .overlay video {
-            position: absolute;
-            top: 0;
-            left: 0;
+        .overlay iframe {
             width: 100%;
             height: 100%;
-            object-fit: cover;
         }
         .slider {
             position: absolute;
@@ -58,35 +53,17 @@
 <body>
     <div class="container">
         <div class="video-container">
-            <video id="video1" src="https://mov-player.yomiuri.co.jp/script?key=edc5d1c5bf9d32e47acd9d75ea0e84c87e2bfeee0f45165d61cec1b784bdbc1e&type=1" muted loop></video>
+            <iframe id="video1" src="https://mov-player.yomiuri.co.jp/script?key=edc5d1c5bf9d32e47acd9d75ea0e84c87e2bfeee0f45165d61cec1b784bdbc1e&type=1" frameborder="0" allowfullscreen></iframe>
         </div>
         <div class="overlay" id="overlay">
-            <video id="video2" src="https://mov-player.yomiuri.co.jp/script?key=7e12894ac493090b66769e35246715702a03fc340e65246d7aa642a9dc850fa3&type=1" muted loop></video>
+            <iframe id="video2" src="https://mov-player.yomiuri.co.jp/script?key=7e12894ac493090b66769e35246715702a03fc340e65246d7aa642a9dc850fa3&type=1" frameborder="0" allowfullscreen></iframe>
         </div>
         <div class="slider" id="slider"></div>
     </div>
     <script>
         const slider = document.getElementById("slider");
         const overlay = document.getElementById("overlay");
-        const video1 = document.getElementById("video1");
-        const video2 = document.getElementById("video2");
 
-        // 動画を同期
-        function syncVideos(action) {
-            if (action === 'play') {
-                video1.play();
-                video2.play();
-            } else if (action === 'pause') {
-                video1.pause();
-                video2.pause();
-            }
-        }
-        
-        video1.onplay = () => syncVideos('play');
-        video2.onplay = () => syncVideos('play');
-        video1.onpause = () => syncVideos('pause');
-        video2.onpause = () => syncVideos('pause');
-        
         slider.addEventListener("mousedown", (event) => {
             event.preventDefault();
             document.addEventListener("mousemove", moveSlider);
