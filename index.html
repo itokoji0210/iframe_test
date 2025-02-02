@@ -53,6 +53,15 @@
       touch-action: none;
       user-select: none;
     }
+    /* タップ判定をファジーにするため、透明なヒットエリアを追加 */
+    .slider::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      bottom: -10px;
+      left: -10px;
+      right: -10px;
+    }
     /* 下部の操作パネル */
     #controls {
       width: 90%;
@@ -60,11 +69,14 @@
       margin-top: 20px;
       text-align: center;
       color: white;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
     }
-    #play-pause-btn {
+    #play-pause-btn, #reload-btn {
       font-size: 1.2em;
       padding: 8px 16px;
-      margin-bottom: 10px;
       cursor: pointer;
     }
     .progress-bar {
@@ -74,7 +86,6 @@
       border-radius: 5px;
       cursor: pointer;
       position: relative;
-      margin-bottom: 5px;
     }
     .progress {
       height: 100%;
@@ -84,13 +95,15 @@
     }
     .time-display {
       font-size: 0.9em;
+      width: 100%;
+      text-align: center;
     }
     /* モバイル向け調整 */
     @media (max-width: 600px) {
       .slider-container {
         height: 60vh;
       }
-      #play-pause-btn {
+      #play-pause-btn, #reload-btn {
         font-size: 1.5em;
         padding: 10px 20px;
       }
@@ -116,6 +129,7 @@
 
   <div id="controls">
     <button id="play-pause-btn">▶ / ⏸</button>
+    <button id="reload-btn">再読み込み</button>
     <div class="progress-bar" id="progress-bar">
       <div class="progress" id="progress"></div>
     </div>
@@ -125,13 +139,15 @@
   <script>
     let playerLeft, playerRight;
     let leftReady = false, rightReady = false;
+    const leftVideoId = 's_kdaEEnyuM';
+    const rightVideoId = 'JdLvgPegPF4';
+    let syncInterval = null;
 
-    // YouTube APIが読み込まれると呼ばれる関数
     function onYouTubeIframeAPIReady() {
       playerLeft = new YT.Player('player-left', {
         height: '100%',
         width: '100%',
-        videoId: 's_kdaEEnyuM', // 左側の動画ID
+        videoId: leftVideoId,
         playerVars: {
           'playsinline': 1,
           'autoplay': 0,
@@ -143,13 +159,13 @@
         },
         events: {
           'onReady': () => { leftReady = true; syncPlay(); },
-          'onStateChange': syncVideos
+          'onStateChange': onPlayerStateChange
         }
       });
       playerRight = new YT.Player('player-right', {
         height: '100%',
         width: '100%',
-        videoId: 'JdLvgPegPF4', // 右側の動画ID
+        videoId: rightVideoId,
         playerVars: {
           'playsinline': 1,
           'autoplay': 0,
@@ -161,7 +177,7 @@
         },
         events: {
           'onReady': () => { rightReady = true; syncPlay(); },
-          'onStateChange': syncVideos
+          'onStateChange': onPlayerStateChange
         }
       });
     }
@@ -174,12 +190,28 @@
       }
     }
 
-    // 再生中に若干ずれている場合、右側を左側に合わせる
-    function syncVideos() {
+    // 動画状態の変化時に同期チェックを開始/停止
+    function onPlayerStateChange(event) {
+      if (event.data === YT.PlayerState.PLAYING) {
+        // 再生中は200msごとに同期チェックを実施
+        if (!syncInterval) {
+          syncInterval = setInterval(checkSync, 200);
+        }
+      } else {
+        // 再生が停止・バッファリング中などの場合はチェックを停止
+        if (syncInterval) {
+          clearInterval(syncInterval);
+          syncInterval = null;
+        }
+      }
+    }
+
+    // 両動画の再生位置が0.3秒以上ズレた場合、右側を左側に合わせる
+    function checkSync() {
       if (playerLeft && playerRight && playerLeft.getCurrentTime && playerRight.getCurrentTime) {
         const timeLeft = playerLeft.getCurrentTime();
         const timeRight = playerRight.getCurrentTime();
-        if (Math.abs(timeRight - timeLeft) > 0.1) {
+        if (Math.abs(timeRight - timeLeft) > 0.3) {
           playerRight.seekTo(timeLeft, true);
         }
       }
@@ -187,10 +219,20 @@
 
     // 再生・停止ボタンの設定
     document.getElementById('play-pause-btn').addEventListener('click', () => {
-      if (playerLeft.getPlayerState() === 1) { // 再生中の場合
+      if (playerLeft.getPlayerState() === YT.PlayerState.PLAYING) {
         playerLeft.pauseVideo();
         playerRight.pauseVideo();
       } else {
+        playerLeft.playVideo();
+        playerRight.playVideo();
+      }
+    });
+
+    // 再読み込みボタンで動画を最初から再生
+    document.getElementById('reload-btn').addEventListener('click', () => {
+      if (playerLeft && playerRight) {
+        playerLeft.seekTo(0, true);
+        playerRight.seekTo(0, true);
         playerLeft.playVideo();
         playerRight.playVideo();
       }
@@ -235,10 +277,9 @@
       const seconds = Math.floor(time % 60);
       return (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds < 10 ? "0" + seconds : seconds);
     }
-    // 0.5秒ごとに進捗バーを更新
     setInterval(updateProgress, 500);
 
-    // 進捗バークリックで任意の時間へシーク（pointerイベントでPC・スマホ双方に対応）
+    // 進捗バークリックで任意の時間へシーク（PC・スマホ双方に対応）
     document.getElementById('progress-bar').addEventListener('pointerdown', function(e) {
       const rect = this.getBoundingClientRect();
       const clickX = e.clientX - rect.left;
